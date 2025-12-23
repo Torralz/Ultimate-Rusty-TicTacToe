@@ -38,42 +38,59 @@ impl Board {
        let mask = 1u16 << pos;
        (self.x_local[local] & mask ) == 0 && (self.o_local[local] & mask ) == 0 
    }
+
+   pub fn is_local_board_available(&self, local: usize, last_pos: usize) -> bool {
+       if local > 8 { return false; }
+       
+       let x_won = (self.x_global & (1u16 << local)) != 0;
+       let o_won = (self.o_global & (1u16 << local)) != 0;
+       if x_won || o_won { return false; }  
+       last_pos == local
+   }
+
 }
 
 fn select_start() -> i32{
      rand::random_range(0..=1)
 }
 
-fn get_move(board: &Board, local_board: usize){
-    let mut terminado = false;
-
-    while !terminado {
+fn get_move_cell(board: &Board, local_board: usize) -> usize {  
+    loop {  
         let mut input_str = String::new();
-        println!("Elija una casilla (0-8):");
-        io::stdin()
-            .read_line(&mut input_str)
-            .expect("Error de lectura");
+        println!("Choose a cell in the local board: {} (0-8):", local_board);  
+        io::stdin().read_line(&mut input_str).expect("Error");
 
-        let input: usize = match input_str.trim().parse() {
-            Ok(num) if num >= 0 && num <= 8 && board.is_free(local_board, num)=> num,
-            _ => {
-                println!("Entrada inválida, intente de nuevo.");
-                continue;
-            }
-        };
-
-        terminado = true;
+        match input_str.trim().parse::<usize>() {
+            Ok(num) if num <= 8 && board.is_free(local_board, num) => return num,  
+            Ok(_) => println!("Invalid cell or occupied! (0-8)"),
+            Err(_) => println!("Invalid number!"),
+        }
     }
 }
 
-fn make_move(){
+fn get_move_local(board: &Board, last_pos: usize) -> usize {  
+    loop {
+        let mut input_str = String::new();
+        println!("Choose a local board (0-8):");
+        io::stdin().read_line(&mut input_str).expect("Error");
 
+        match input_str.trim().parse::<usize>() {
+            Ok(num) if num <= 8 && board.is_local_board_available(num, last_pos) => return num,  
+            Ok(_) => println!("Invalid local board or unavailable!"),
+            Err(_) => println!("Invalid number!"),
+        }
+    }
+}
+
+fn make_move(last_move: &LastMove, board: &Board){
+    //por hacer
 }
 
 fn main() {
     //declaración de variables locales
 
     let mut board = Board::empty();
+    let mut last_move = LastMove::empty();
     println!("Let's start! First we will randomly assign you X or O, O always starts and X always follows");
     let jugador = select_start();
     println!("You have been assigned: {}", if jugador == 0 {"O"} else {"X"});
