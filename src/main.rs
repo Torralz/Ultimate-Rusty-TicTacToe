@@ -52,6 +52,25 @@ impl Board {
        last_pos == local
    }
 
+   fn print(&self) {
+       for i in 0..9 {
+           for j in 0..9 {
+               let mask = 1u16 << j;
+               let cell = if (self.x_local[i] & mask) != 0 { 'X' }
+                        else if (self.o_local[i] & mask) != 0 { 'O' }
+                        else { ' ' };
+               print!("{}|", cell);
+               if j == 2 || j == 5{
+                  print!("|"); 
+               }
+           }
+           println!();
+           if i == 2 || i == 5{
+               println!("---------------------------");
+           }
+       }
+   }
+
 }
 
 fn select_start() -> i32{
@@ -88,15 +107,29 @@ fn get_move_global(board: &Board, last_pos: usize) -> usize {
 
 fn make_move(last_move: &mut LastMove, board: &mut Board){
     //por hacer
-    //1. si es el primer movimiento se juega donde se quiera, para esto necesito tener una forma
-    //   global de saber de quien es el turno
     let local;
     let global;
-    if last_move.local == 9 || last_move.global == 9 {
+    let local_binario = 1u16 << last_move.local;
+    if last_move.local == 9 || last_move.global == 9 { //primer movimiento
        global = get_move_global(board, 4); 
        local = get_move_local(board, global);
        last_move.local = local;
        last_move.global = global;
+       write_board_local(last_move, board, &local, &global);
+    }else {//resto de movimientos
+        if board.x_global & local_binario != 0u16 || board.o_global & local_binario != 0u16 {
+            //hacer movimiento en un tablero que ya esta ocupado(poder elegir el tablero global que
+            //se quiera)
+            global = get_move_global(board, last_move.local); 
+            local = get_move_local(board, global);
+        }
+        else{
+            global = last_move.local;
+            local = get_move_local(board, global);
+        }
+        last_move.local = local;
+        last_move.global = global;
+        write_board_local(last_move, board, &local, &global);
     }
 }
 
@@ -118,6 +151,11 @@ fn main() {
     let jugador = select_start();
     last_move.piece= if jugador == 1 {'O'} else {'X'}; //logica al reves para funciones posteriores
     println!("You have been assigned: {}", if jugador == 0 {'O'} else {'X'});
+
+    loop {
+        board.print();
+        make_move(&mut last_move, &mut board);
+    }
 }
 
 
