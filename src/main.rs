@@ -11,15 +11,19 @@ struct Board{
 
 #[derive(Clone, Copy)]
 struct LastMove{
-    local_board: usize,
-    position: usize, // starts at top left as 0, ends in bottom right as 8
+    global: usize,
+    local: usize, // starts at top left as 0, ends in bottom right as 8
+    piece: char,
+    is_machine: bool,
 }
 
 impl LastMove {
    pub fn empty() -> Self {
        LastMove {
-            local_board: 9,
-            position: 9,
+            global: 9,
+            local: 9,
+            piece: ' ',
+            is_machine: false,
        }
    } 
 }
@@ -54,7 +58,7 @@ fn select_start() -> i32{
      rand::random_range(0..=1)
 }
 
-fn get_move_cell(board: &Board, local_board: usize) -> usize {  
+fn get_move_local(board: &Board, local_board: usize) -> usize {  
     loop {  
         let mut input_str = String::new();
         println!("Choose a cell in the local board: {} (0-8):", local_board);  
@@ -68,7 +72,7 @@ fn get_move_cell(board: &Board, local_board: usize) -> usize {
     }
 }
 
-fn get_move_local(board: &Board, last_pos: usize) -> usize {  
+fn get_move_global(board: &Board, last_pos: usize) -> usize {  
     loop {
         let mut input_str = String::new();
         println!("Choose a local board (0-8):");
@@ -80,10 +84,29 @@ fn get_move_local(board: &Board, last_pos: usize) -> usize {
             Err(_) => println!("Invalid number!"),
         }
     }
+} 
+
+fn make_move(last_move: &mut LastMove, board: &mut Board){
+    //por hacer
+    //1. si es el primer movimiento se juega donde se quiera, para esto necesito tener una forma
+    //   global de saber de quien es el turno
+    let local;
+    let global;
+    if last_move.local == 9 || last_move.global == 9 {
+       global = get_move_global(board, 4); 
+       local = get_move_local(board, global);
+       last_move.local = local;
+       last_move.global = global;
+    }
 }
 
-fn make_move(last_move: &LastMove, board: &Board){
-    //por hacer
+fn write_board_local(last_move: &mut LastMove, board: &mut Board, local: &usize, global: &usize){
+    if last_move.piece == 'O' {
+        board.x_local[*global] |= 1u16 << *local;
+    }
+    else if last_move.piece == 'X' {
+        board.o_local[*global] = 1u16 << *local;
+    }
 }
 
 fn main() {
@@ -93,7 +116,8 @@ fn main() {
     let mut last_move = LastMove::empty();
     println!("Let's start! First we will randomly assign you X or O, O always starts and X always follows");
     let jugador = select_start();
-    println!("You have been assigned: {}", if jugador == 0 {"O"} else {"X"});
+    last_move.piece= if jugador == 1 {'O'} else {'X'}; //logica al reves para funciones posteriores
+    println!("You have been assigned: {}", if jugador == 0 {'O'} else {'X'});
 }
 
 
