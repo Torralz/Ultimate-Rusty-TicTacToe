@@ -51,22 +51,48 @@ impl Board {
        if x_won || o_won { return false; }  
        last_pos == local
    }
+   pub fn print(&self) {
+       // Construye la salida línea por línea para 9 filas (3 bloques de 3 filas)
+       for big_row in 0..3 {
+           // Filas dentro de cada bloque de 3 (0, 1, 2)
+           for inner_row in 0..3 {
+               // Bloques horizontales de 3 local boards
+               for big_col in 0..3 {
+                   let local = big_row * 3 + big_col;
 
-   fn print(&self) {
-       for i in 0..9 {
-           for j in 0..9 {
-               let mask = 1u16 << j;
-               let cell = if (self.x_local[i] & mask) != 0 { 'X' }
-                        else if (self.o_local[i] & mask) != 0 { 'O' }
-                        else { ' ' };
-               print!("{}|", cell);
-               if j == 2 || j == 5{
-                  print!("|"); 
+                   // Cada local board tiene 3 celdas en una fila
+                   for inner_col in 0..3 {
+                       let pos = inner_row * 3 + inner_col;
+                       let mask = 1u16 << pos;
+
+                       let ch = if (self.x_local[local] & mask) != 0 {
+                           'X'
+                       } else if (self.o_local[local] & mask) != 0 {
+                           'O'
+                       } else {
+                           ' '
+                       };
+
+                       print!("{}", ch);
+
+                       // Separador entre celdas dentro del mismo tablero local
+                       if inner_col != 2 {
+                           print!(" ");
+                       }
+                   }
+
+                   // Separador visual entre tableros locales (bloques verticales)
+                   if big_col != 2 {
+                       print!(" | ");
+                   }
                }
+               // Salto de línea al terminar una fila completa de 9 celdas
+               println!();
            }
-           println!();
-           if i == 2 || i == 5{
-               println!("---------------------------");
+
+           // Separador visual entre bloques horizontales (cada 3 filas)
+           if big_row != 2 {
+               println!("{}", "-------+-------+-------");
            }
        }
    }
